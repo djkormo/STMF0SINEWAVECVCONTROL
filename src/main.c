@@ -1,4 +1,3 @@
-// ----------------------------------------------------------------------------
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 #pragma GCC diagnostic ignored "-Wmissing-declarations"
@@ -48,20 +47,20 @@ NVIC_InitTypeDef NVIC_InitStructure;
 uint32_t lutIndex =0;
 uint32_t lutStep =15;
 uint8_t  lutStepADC =1;
+
 int handleTIM =1;
 int usingLeds =0;
 int usingDAC=1;
 int usingADC=1;
 
 
-uint16_t outputDAC=4095;
-
 
 #define SAMPLES 2
 
 uint16_t RegularConvData[SAMPLES];
 
-//boundarier for DAC
+//boundaries for ADC(12 bit resolution)
+
 #define MININPUTADC 0.0
 #define MAXINPUTADC 4095.0
 
@@ -388,14 +387,14 @@ void TIM3_IRQHandler()
 }
 
 
-void DMA1_Channel1_IRQHandler(void) // Called at 40 Hz, LED Toggles at 20 Hz
+void DMA1_Channel1_IRQHandler(void)
 {
   /* Test on DMA1 Channel1 Transfer Complete interrupt */
   if (DMA_GetITStatus(DMA1_IT_HT1))
   {
     /* Clear DMA1 Channel1 Half Transfer interrupt pending bits */
     DMA_ClearITPendingBit(DMA1_IT_HT1);
-
+    // do something
 
   }
 
@@ -405,16 +404,16 @@ void DMA1_Channel1_IRQHandler(void) // Called at 40 Hz, LED Toggles at 20 Hz
     /* Clear DMA1 Channel1 Transfer Complete interrupt pending bits */
     DMA_ClearITPendingBit(DMA1_IT_TC1);
 
-    //GPIOC->BRR = 0x300;/* Reset PC8 and PC9 */
 
+    // read pitch
     ADC1ConvertedPitchValue=RegularConvData[0];
+    // read modulation value
     //ADC1ConvertedModulationValue=RegularConvData[1];
 
   }
 
-  //ADC1ConvertedPitchValue=RegularConvData[0];
-    //ADC1ConvertedModulationValue=RegularConvData[1];
-  FMPhase=0;//(uint16_t) RegularConvData[1]*0.1;
+
+  FMPhase=0; // for future use
 }
 
 
@@ -432,13 +431,12 @@ int main(int argc, char* argv[])
 
     if (usingADC)
     {
-    	//InitADC();
+
     	ADC_TIM_DMA_Config();
     }
 
     InitTimer();
 
-    //NVIC_PriorityGroupConfig(NVIC_PriorityGroup_0);
 
   // Infinite loop
   while (1)
@@ -447,8 +445,6 @@ int main(int argc, char* argv[])
 
 
 
-	  //ADC1ConvertedPitchValue=RegularConvData[0];
-	  //ADC1ConvertedModulationValue=RegularConvData[1];
 	  ADC1ConvertedModulationValue=4095;
 	  VoltValue=(float) (10*ADC1ConvertedPitchValue/4095.0);
 
@@ -457,7 +453,6 @@ int main(int argc, char* argv[])
 
 		  	  GPIO_ResetBits(GPIOC, BlueLED);
 		  	  GPIO_ResetBits(GPIOC, GreenLED);
-		  	 // lutStep=5;
 
 	  	     }
 	  if (VoltValue < 2 && VoltValue>=1)
@@ -465,7 +460,7 @@ int main(int argc, char* argv[])
 
 	  	       GPIO_ResetBits(GPIOC, BlueLED);
 	  	  	   GPIO_SetBits(GPIOC, GreenLED);
-	  	  	  // lutStep=10;
+
 	  	     }
 	  if (VoltValue < 3 && VoltValue>=2)
 	  	  	     {
@@ -480,7 +475,7 @@ int main(int argc, char* argv[])
 
 	  	  	       GPIO_SetBits(GPIOC, BlueLED);
 	  	  	       GPIO_SetBits(GPIOC, GreenLED);
-	  	  	  	  // lutStep=20;
+
 	  	  	     }
 
 	  if (VoltValue < 5 && VoltValue>=4)
@@ -488,15 +483,14 @@ int main(int argc, char* argv[])
 
 		  	  	  GPIO_SetBits(GPIOC, BlueLED);
 		  	  	  GPIO_SetBits(GPIOC, GreenLED);
-	  	  	  	  //lutStep=25;
+
 	  	  	     }
 
 
 
-
-
+	  // linear scale
 	  lutStep=rangeScaleLinear(ADC1ConvertedPitchValue,0,4095,10,512);
-	  //lutStep=128;
+
 
   }
 
@@ -515,6 +509,4 @@ void assert_failed(uint8_t* file, uint32_t line) {
 
 #pragma GCC diagnostic pop
 
-// ----------------------------------------------------------------------------
 
-// ----------------------------------------------------------------------------
