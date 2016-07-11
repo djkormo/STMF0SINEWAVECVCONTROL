@@ -1,47 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "diag/Trace.h"
-
 #include <math.h>
-
-#include "stm32f0xx.h"
-
-
-// table for SIN with 12-bit resolution 2^12=4096, minimal 0, maximal - 4095
-const uint16_t Sine32_12bit [32] = {
-                      2047,
-					  2447,
-					  2831,
-					  3185,
-					  3498,
-					  3750,
-					  3939,
-					  4056,
-					  4095,
-					  4056,
-                      3939,
-					  3750,
-					  3495,
-					  3185,
-					  2831,
-					  2447,
-					  2047,
-					  1647,
-					  1263,
-					  909,
-                      599,
-					  344,
-					  155,
-					  38,
-					  0,
-					  38,
-					  155,
-					  344,
-					  599,
-					  909,
-					  1263,
-					  1647};
-
+// for uint16_t, uint8_t, uint32_t
+#include <stdint.h>
 
 
 // table for Sine with 12-bit resolution 2^12=4096, minimal 0, maximal - 4095
@@ -1074,32 +1036,4 @@ const uint16_t Sine1024_12bit [1024] =
 
 };
 
-/*
-Zak³adaj¹c, ¿e mamy wartoœæ x z przedzia³u [x_min, x_max]
-i chcemy j¹ przenieœæ do [y_min, y_max], mo¿na skorzystaæ ze wzoru:
-
-*/
-int rangeScaleLinear
-(int x,
-		int x_min,
-		int x_max,
-		int y_min,
-		int y_max)
-
-{
-	return (int) y_min+(x-x_min)*(y_max-y_min)/(x_max-x_min);
-};
-
-
-extern float rangeScaleVoltPerOclave
-(float v,
-		float v_min,
-		float x_max,
-		float y_min,
-		float y_max)
-
-{
-	return 0.0;
-
-};
 
