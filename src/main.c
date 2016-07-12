@@ -11,6 +11,7 @@
 #include "resources.h"
 
 #include <math.h>
+#include "stm32f0_discovery.h"
 #include <stm32f0xx_gpio.h>
 #include <stm32f0xx_rcc.h>
 #include <stm32f0xx_tim.h>
@@ -18,9 +19,7 @@
 #include <stm32f0xx_dma.h>
 #include <stm32f0xx_adc.h>
 
-#define GreenLED GPIO_Pin_9
-#define BlueLED GPIO_Pin_8
-#define LEDGPIO GPIOC
+
 
 //Initialization structs
 

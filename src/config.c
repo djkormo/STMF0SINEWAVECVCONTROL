@@ -15,7 +15,7 @@
 #include "config.h"
 
 const uint8_t SAMPLES =2;
-uint16_t RegularConvData [2] ={0,0} ;
+uint16_t RegularConvData [2] ;
 #define GreenLED GPIO_Pin_9
 #define BlueLED GPIO_Pin_8
 #define LEDGPIO GPIOC
