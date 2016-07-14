@@ -24,19 +24,13 @@
 //Initialization structs
 
 
-GPIO_InitTypeDef         	Buttons;
-GPIO_InitTypeDef         	Pins;
-NVIC_InitTypeDef         	ADCNVIC_InitStructure;
-
-
-
 uint32_t lutIndex =0;
 uint32_t lutStep =15;
 uint8_t  lutStepADC =1;
 
 int handleTIM =1;
 int usingLeds =0;
-int usingDAC=1;
+int usingDAC=0; //* TODO not working
 int usingADC=1;
 
 
@@ -57,6 +51,29 @@ uint16_t FMPhase =0;
 
 uint16_t ADC1ConvertedPitchValue =0;
 uint16_t ADC1ConvertedModulationValue =0;
+
+
+
+
+
+
+
+
+
+
+
+
+/*
+ * Example of ADC with IRQ
+ *
+ * https://my.st.com/public/STe2ecommunities/mcu/Lists/STM32Discovery/Flat.aspx?RootFolder=https%3a%2f%2fmy%2est%2ecom%2fpublic%2fSTe2ecommunities%2fmcu%2fLists%2fSTM32Discovery%2fstm32f0%20interrupt&FolderCTID=0x01200200770978C69A1141439FE559EB459D75800084C20D8867EAD444A5987D47BE638E0F&currentviews=494
+*/
+/*
+https://my.st.com/public/STe2ecommunities/mcu/Lists/cortex_mx_stm32/Flat.aspx?RootFolder=/public/STe2ecommunities/mcu/Lists/cortex_mx_stm32/STM32F0%20ADC-DMA%20touble&FolderCTID=0x01200200770978C69A1141439FE559EB459D7580009C4E14902C3CDE46A77F0FFD06506F5B&currentviews=35
+*/
+
+
+
 
 
 
@@ -137,6 +154,7 @@ void DMA1_Channel1_IRQHandler(void)
 
     // read pitch
     ADC1ConvertedPitchValue=RegularConvData[0];
+   // ADC1ConvertedPitchValue=3000;
     // read modulation value
     //ADC1ConvertedModulationValue=RegularConvData[1];
 
@@ -157,15 +175,17 @@ int main(int argc, char* argv[])
     if (usingDAC)
     {
     	InitDAC();
+    	InitDACTimer();
     }
 
     if (usingADC)
     {
 
     	InitADC();
+
     }
 
-    InitDACTimer();
+
 
 
   // Infinite loop
@@ -176,7 +196,7 @@ int main(int argc, char* argv[])
 
 
 	  ADC1ConvertedModulationValue=4095;
-	  VoltValue=(float) (10*ADC1ConvertedPitchValue/4095.0);
+	  VoltValue=(float)(10*ADC1ConvertedPitchValue/4095.0);
 
 	  if (VoltValue < 1)
 	  	     {

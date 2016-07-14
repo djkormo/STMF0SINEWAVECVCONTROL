@@ -4,6 +4,7 @@
  *  Created on: 11 lip 2016
  *      Author: kormo
  */
+#include "stm32f0_discovery.h"
 #include <stm32f0xx_gpio.h>
 #include <stm32f0xx_rcc.h>
 #include <stm32f0xx_tim.h>
@@ -13,12 +14,12 @@
 
 
 #include "config.h"
-
-const uint8_t SAMPLES =2;
-uint16_t RegularConvData [2] ;
 #define GreenLED GPIO_Pin_9
 #define BlueLED GPIO_Pin_8
 #define LEDGPIO GPIOC
+#define DACGPIO GPIOA
+const uint8_t SAMPLES =2;
+uint16_t RegularConvData [2] ;
 
 void InitClocks()
 {
@@ -39,8 +40,8 @@ void InitClocks()
 void  InitBoard(void)
 {
 
-		GPIO_InitTypeDef   LEDs;
 
+		GPIO_InitTypeDef   LEDs;
         SystemInit();
         SystemCoreClockUpdate();
 
@@ -51,6 +52,8 @@ void  InitBoard(void)
         RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3 ,ENABLE);
         // TIM1 for ADC
         RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM1, ENABLE);
+
+        GPIO_DeInit(GPIOC);
 
         //Initialize LEDs
         GPIO_StructInit(&LEDs);
@@ -65,16 +68,19 @@ void  InitBoard(void)
         GPIO_ResetBits(LEDGPIO, BlueLED);
 
 
+
+
+
+
 }
 
-
-
+//*TODO tu jest problem z obslug¹
 // configure DAC
 void InitDAC(void)
 {
 
-	GPIO_InitTypeDef	GPIO_InitStructure;
 	DAC_InitTypeDef     DAC_InitStructure;
+	GPIO_InitTypeDef	GPIO_InitStructure;
 
 	RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOA, ENABLE);
 
@@ -82,14 +88,14 @@ void InitDAC(void)
 
 	RCC_APB1PeriphClockCmd(RCC_APB1Periph_DAC, ENABLE);
 
-
-
+	GPIO_DeInit(DACGPIO);
+	GPIO_StructInit(&GPIO_InitStructure);
   // Configure PA.04/05 (DAC) as output -------------------------
   GPIO_InitStructure.GPIO_Pin = GPIO_Pin_4 | GPIO_Pin_5;
   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AN;
   GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
   GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-  GPIO_Init(GPIOA, &GPIO_InitStructure);
+  GPIO_Init(DACGPIO, &GPIO_InitStructure);
 
 
   /* Fill DAC InitStructure */
@@ -117,20 +123,11 @@ void InitDAC(void)
 }
 
 
-/*
- * Example of ADC with IRQ
- *
- * https://my.st.com/public/STe2ecommunities/mcu/Lists/STM32Discovery/Flat.aspx?RootFolder=https%3a%2f%2fmy%2est%2ecom%2fpublic%2fSTe2ecommunities%2fmcu%2fLists%2fSTM32Discovery%2fstm32f0%20interrupt&FolderCTID=0x01200200770978C69A1141439FE559EB459D75800084C20D8867EAD444A5987D47BE638E0F&currentviews=494
-*/
-/*
-https://my.st.com/public/STe2ecommunities/mcu/Lists/cortex_mx_stm32/Flat.aspx?RootFolder=/public/STe2ecommunities/mcu/Lists/cortex_mx_stm32/STM32F0%20ADC-DMA%20touble&FolderCTID=0x01200200770978C69A1141439FE559EB459D7580009C4E14902C3CDE46A77F0FFD06506F5B&currentviews=35
-*/
-
-
 void InitDACTimer(void)
 {
-	TIM_TimeBaseInitTypeDef 	TTB;
+
 	NVIC_InitTypeDef         	DACNVIC_InitStructure;
+	TIM_TimeBaseInitTypeDef 	TTB;
 
 
 	 	 	SystemInit(); //Ensure CPU is running at correctly set clock speed
@@ -165,15 +162,16 @@ void InitDACTimer(void)
 
 
 
+
 void InitADC(void)
 {
 
- ADC_InitTypeDef 			ADC_InitStructure;
- TIM_TimeBaseInitTypeDef 	TIM_TimeBaseStructure;
- NVIC_InitTypeDef 			NVIC_InitStructure;
- GPIO_InitTypeDef 			GPIO_InitStructure;
- TIM_OCInitTypeDef 			TIM_OCInitStructure;
- DMA_InitTypeDef 			DMA_InitStructure;
+	ADC_InitTypeDef 			ADC_InitStructure;
+	TIM_TimeBaseInitTypeDef 	TIM_TimeBaseStructure;
+	NVIC_InitTypeDef 			NVIC_InitStructure;
+	GPIO_InitTypeDef 			GPIO_InitStructure;
+	TIM_OCInitTypeDef 			TIM_OCInitStructure;
+	DMA_InitTypeDef 			DMA_InitStructure;
 
   /* ADC1 DeInit */
   ADC_DeInit(ADC1);
@@ -289,3 +287,6 @@ void InitADC(void)
 
 
 }
+
+
+

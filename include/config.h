@@ -20,11 +20,8 @@ extern const uint8_t SAMPLES;
 extern uint16_t RegularConvData[];
 
 extern void InitClocks(void);
+extern void InitBoard(void);
 extern void InitDAC(void);
-void InitDACTimer(void);
-void InitADC(void);
-void  InitBoard(void);
-
-
-
+extern void InitDACTimer(void);
+extern void InitADC(void);
 #endif /* CONFIG_H_ */
