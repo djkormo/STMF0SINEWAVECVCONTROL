@@ -118,6 +118,7 @@ void  InitBoard()
         LEDs.GPIO_PuPd = GPIO_PuPd_NOPULL;
         LEDs.GPIO_Speed = GPIO_Speed_Level_3; //50MHz
         GPIO_Init(LEDGPIO, &LEDs);
+
         // turn on green  and turn 0ff blue Leds
         GPIO_SetBits(LEDGPIO, GreenLED);
         GPIO_ResetBits(LEDGPIO, BlueLED);
