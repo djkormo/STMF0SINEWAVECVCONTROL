@@ -19,19 +19,22 @@
 #define LEDGPIO GPIOC
 #define DACGPIO GPIOA
 const uint8_t SAMPLES =2;
-uint16_t RegularConvData [2] ;
+uint16_t RegularConvData [3] ;
 
 void InitClocks()
 {
     // Set up 48 MHz Core Clock using HSI (8Mhz) with PLL x 6
     RCC_PLLConfig(RCC_PLLSource_HSI, RCC_PLLMul_6);
+    //RCC_PLLConfig(RCC_PLLSource_HSI48,RCC_PLLMul_2);
     RCC_PLLCmd(ENABLE);
+
 
     // Wait for PLLRDY after enabling PLL.
     while (RCC_GetFlagStatus(RCC_FLAG_PLLRDY) != SET)
     { }
 
-    RCC_SYSCLKConfig(RCC_SYSCLKSource_PLLCLK);  // Select the PLL as clock source.
+    //RCC_SYSCLKConfig(RCC_SYSCLKSource_PLLCLK);  // Select the PLL as clock source.
+    RCC_SYSCLKConfig(RCC_SYSCLKSource_HSI48);
     SystemCoreClockUpdate();
 }
 

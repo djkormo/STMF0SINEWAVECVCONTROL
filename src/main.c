@@ -19,6 +19,7 @@
 #include <stm32f0xx_dma.h>
 #include <stm32f0xx_adc.h>
 
+
 // diodes
 #define GreenLED GPIO_Pin_9
 #define BlueLED GPIO_Pin_8
@@ -50,7 +51,7 @@ uint32_t lutIndex =0;
 uint32_t lutStep =15;
 uint8_t  lutStepADC =1;
 int handleTIM =1;
-int usingLeds =0;
+int usingLeds =1;
 int usingDAC=1;
 int usingADC=1;
 
@@ -58,7 +59,7 @@ int usingADC=1;
 uint16_t outputDAC=4095;
 
 
-#define SAMPLES 2
+#define SAMPLES 3
 
 uint16_t RegularConvData[SAMPLES];
 
@@ -76,10 +77,12 @@ uint16_t FMPhase =0;
 
 uint16_t ADC1ConvertedPitchValue =0;
 uint16_t ADC1ConvertedModulationValue =0;
+uint16_t ADC1ConvertedDepthValue = 0;
+uint16_t ADC1ConvertedParam1Value =0;
+uint16_t ADC1ConvertedParam2Value =0;
 
-
-
-void Setup_Init_Clocks()
+/*
+void InitClocks()
 {
     // Set up 48 MHz Core Clock using HSI (8Mhz) with PLL x 6
     RCC_PLLConfig(RCC_PLLSource_HSI, RCC_PLLMul_6);
@@ -92,7 +95,7 @@ void Setup_Init_Clocks()
     RCC_SYSCLKConfig(RCC_SYSCLKSource_PLLCLK);  // Select the PLL as clock source.
     SystemCoreClockUpdate();
 }
-
+*/
 
 // configure board
 void  InitBoard()
@@ -128,7 +131,7 @@ void  InitBoard()
 // configure DAC
 void InitDAC(void)
 {
-
+	// for output PINS
 	RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOA, ENABLE);
 
   /* DAC Periph clock enable */
@@ -179,7 +182,7 @@ void InitDAC(void)
 https://my.st.com/public/STe2ecommunities/mcu/Lists/cortex_mx_stm32/Flat.aspx?RootFolder=/public/STe2ecommunities/mcu/Lists/cortex_mx_stm32/STM32F0%20ADC-DMA%20touble&FolderCTID=0x01200200770978C69A1141439FE559EB459D7580009C4E14902C3CDE46A77F0FFD06506F5B&currentviews=35
 */
 
-void ADC_TIM_DMA_Config(void)
+void InitADC(void)
 {
 
 
@@ -198,7 +201,7 @@ void ADC_TIM_DMA_Config(void)
   /* Time base configuration */
   TIM_TimeBaseStructInit(&TIM_TimeBaseStructure);
   TIM_TimeBaseStructure.TIM_Prescaler = (SystemCoreClock / 1000000) - 1; // 1 MHz, from 48 MHz
-  TIM_TimeBaseStructure.TIM_Period = 10 - 1; // 100 Hz
+  TIM_TimeBaseStructure.TIM_Period = 10-1; // 100 Hz
   TIM_TimeBaseStructure.TIM_ClockDivision = 0x0;
   TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;
   TIM_TimeBaseInit(TIM1, &TIM_TimeBaseStructure);
@@ -249,7 +252,7 @@ void ADC_TIM_DMA_Config(void)
 
   /* Configure the ADC1 in continous mode withe a resolutuion equal to 12 bits  */
   ADC_InitStructure.ADC_Resolution = ADC_Resolution_12b;
-  ADC_InitStructure.ADC_ContinuousConvMode = DISABLE;
+  ADC_InitStructure.ADC_ContinuousConvMode = DISABLE; // was DIsable
   ADC_InitStructure.ADC_ExternalTrigConvEdge = ADC_ExternalTrigConvEdge_Rising;
 
   ADC_InitStructure.ADC_ExternalTrigConv =  ADC_ExternalTrigConv_T1_CC4;
@@ -257,17 +260,18 @@ void ADC_TIM_DMA_Config(void)
   ADC_InitStructure.ADC_ScanDirection = ADC_ScanDirection_Upward;
   ADC_Init(ADC1, &ADC_InitStructure);
 
-  /* Convert the  ADC_Channnel_0  with 7.5 Cycles as sampling time */
-  ADC_ChannelConfig(ADC1, ADC_Channel_1 , ADC_SampleTime_239_5Cycles);
-
-  /* Convert the  ADC_Channnel_1  with 7.5 Cycles as sampling time */
+  /* Convert the  ADC_Channnel_0  with  sampling time */
   ADC_ChannelConfig(ADC1, ADC_Channel_0 , ADC_SampleTime_239_5Cycles);
 
-  /* Convert the  ADC_Channnel_2  with 7.5 Cycles as sampling time */
-  //ADC_ChannelConfig(ADC1, ADC_Channel_2 , ADC_SampleTime_7_5Cycles);
+  /* Convert the  ADC_Channnel_1  with  sampling time */
+  ADC_ChannelConfig(ADC1, ADC_Channel_1 , ADC_SampleTime_239_5Cycles);
+
+
+  /* Convert the  ADC_Channnel_2  with  sampling time */
+  ADC_ChannelConfig(ADC1, ADC_Channel_2 , ADC_SampleTime_239_5Cycles);
 
   /* Convert the  ADC_Channnel_3  with 7.5 Cycles as sampling time */
-  //ADC_ChannelConfig(ADC1, ADC_Channel_3 , ADC_SampleTime_7_5Cycles);
+  //ADC_ChannelConfig(ADC1, ADC_Channel_3 , ADC_SampleTime_239_5Cycles);
 
   /* ADC Calibration */
   ADC_GetCalibrationFactor(ADC1);
@@ -282,7 +286,7 @@ void ADC_TIM_DMA_Config(void)
   ADC_StartOfConversion(ADC1);
 
 
-  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_4 | GPIO_Pin_5;
+  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_4 | GPIO_Pin_5|GPIO_Pin_6|GPIO_Pin_7;
   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AN;
   GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
   GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
@@ -307,8 +311,8 @@ void InitTimer()
 	     	//SysTick_Config(SystemCoreClock/1000); //Set up a systick interrupt every millisecond
 	     	//SysTick_Config(SystemCoreClock);
             TTB.TIM_CounterMode = TIM_CounterMode_Up;
-            TTB.TIM_Prescaler = 300-1; //  4800 kHz // was 300-1
-            TTB.TIM_Period = 10-1; //1Hz; // was 10
+            TTB.TIM_Prescaler = 1; //  4800 kHz // was 300-1
+            TTB.TIM_Period = 1; //1Hz; // was 10-1
             TTB.TIM_RepetitionCounter = 0;
             TIM_TimeBaseInit(TIM3, &TTB);
             TIM_Cmd(TIM3, ENABLE);
@@ -410,8 +414,11 @@ void DMA1_Channel1_IRQHandler(void) // Called at 40 Hz, LED Toggles at 20 Hz
 
     //GPIOC->BRR = 0x300;/* Reset PC8 and PC9 */
 
+    // read table from ADC (with DMA)
     ADC1ConvertedPitchValue=RegularConvData[0];
-    ADC1ConvertedModulationValue=RegularConvData[1];
+    ADC1ConvertedModulationValue=(uint16_t) (RegularConvData[1]+RegularConvData[2])/2; //* TODO
+    ADC1ConvertedDepthValue=RegularConvData[2];
+
     lutStep=rangeScaleLinear(ADC1ConvertedPitchValue,0,4095,10,512);
   }
 
@@ -423,7 +430,7 @@ void DMA1_Channel1_IRQHandler(void) // Called at 40 Hz, LED Toggles at 20 Hz
 int main(void)
 {
 
-	Setup_Init_Clocks();
+	InitClocks();
     InitBoard();
 
     if (usingDAC)
@@ -434,7 +441,7 @@ int main(void)
     if (usingADC)
     {
     	//InitADC();
-    	ADC_TIM_DMA_Config();
+    	InitADC();
     }
 
     InitTimer();
