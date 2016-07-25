@@ -260,6 +260,7 @@ void InitADC(void)
   ADC_InitStructure.ADC_ScanDirection = ADC_ScanDirection_Upward;
   ADC_Init(ADC1, &ADC_InitStructure);
 
+
   /* Convert the  ADC_Channnel_0  with  sampling time */
   ADC_ChannelConfig(ADC1, ADC_Channel_0 , ADC_SampleTime_239_5Cycles);
 

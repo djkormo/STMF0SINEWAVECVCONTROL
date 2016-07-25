@@ -72,7 +72,6 @@ void  InitBoard(void)
         GPIO_ResetBits(LEDGPIO, BlueLED);
 
 
-
 }
 */
 
