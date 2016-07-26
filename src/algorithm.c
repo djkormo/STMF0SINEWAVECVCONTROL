@@ -5,6 +5,7 @@
  *      Author: kormo
  */
 #include "algorithm.h"
+#include <math.h>
 
 /*
 Zak³adaj¹c, ¿e mamy wartoœæ x z przedzia³u [x_min, x_max]
@@ -22,16 +23,18 @@ int rangeScaleLinear
 	return (int) y_min+(x-x_min)*(y_max-y_min)/(x_max-x_min);
 };
 
+// f(v)= f0*2^ (v-v0/v0)
 
-extern float rangeScaleVoltPerOclave
-(float v,
-		float v_min,
-		float x_max,
-		float y_min,
-		float y_max)
+double rangeScaleVoltPerOclave
+(double v,
+		double v0,
+		double f0
+		)
 
 {
+	double f;
+	f=f0 * pow(2.0,((v-v0)/v0));
 
-	return 0.0;
+	return f;
 
 };

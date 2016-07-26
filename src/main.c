@@ -29,7 +29,7 @@
 #define PushButton_Pin GPIO_Pin_0
 #define PushButton_GPIO GPIOA
 
-//Initialization structs
+/* Initialization structures */
 
 GPIO_InitTypeDef			GPIO_InitStructure;
 GPIO_InitTypeDef         	LEDs;
@@ -47,9 +47,7 @@ ADC_InitTypeDef ADC_InitStructure;
 DMA_InitTypeDef DMA_InitStructure;
 NVIC_InitTypeDef NVIC_InitStructure;
 
-uint32_t lutIndex =0;
-uint32_t lutStep =15;
-uint8_t  lutStepADC =1;
+
 int handleTIM =1;
 int usingLeds =1;
 int usingDAC=1;
@@ -68,11 +66,13 @@ uint16_t RegularConvData[SAMPLES];
 #define MININPUTADC 0.0
 #define MAXINPUTADC 4095.0
 
-float VoltValue=0;
+double VoltValue=0;
 
 uint32_t accumulator=0;
+uint16_t accumulator10bits=0;
 uint32_t accumulatorStep=0;
 uint16_t CurrentTimerVal = 0;
+
 uint16_t FMPhase =0;
 
 uint16_t ADC1ConvertedPitchValue =0;
@@ -80,6 +80,11 @@ uint16_t ADC1ConvertedModulationValue =0;
 uint16_t ADC1ConvertedDepthValue = 0;
 uint16_t ADC1ConvertedParam1Value =0;
 uint16_t ADC1ConvertedParam2Value =0;
+
+// indexing lut fc table
+uint16_t lutFcIndex =0;
+uint32_t lutStep =15;
+uint8_t  lutStepADC =1;
 
 /*
 void InitClocks()
@@ -367,19 +372,44 @@ void TIM3_IRQHandler()
 
     	if (usingDAC)
     	{
+
+    	    // 32 bit range accumulator
+
+    	    accumulator=+lutStep;
+    	    // getting  10 higher bits from accumulator
+
+    	    /*
+    	        	    http://stackoverflow.com/questions/8011700/how-do-i-extract-specific-n-bits-of-a-32-bit-unsigned-integer-in-c
+    	    */
+    	    accumulator10bits=(accumulator & (0x1FFFF << (32 - 10))) >> (32 - 10);
+
+    	   // within range of  2^10
+    	   if (accumulator10bits>=LUTSIZE)
+    	   {
+    		   accumulator10bits-=LUTSIZE;
+    	   }
+
     	// index modulo number of samples
 
-    	if (lutIndex+FMPhase>=1024)
+    	if (lutFcIndex+FMPhase>=LUTSIZE)
     	{
-    		//lutIndex= lutIndex%1024;
-    		lutIndex-=1024; // instead of zero
+
+    		lutFcIndex-=LUTSIZE; // instead of zero
     	}
 
-
+    		// sending 12-bits output signal
 			DAC_SetChannel1Data(DAC_Align_12b_R,
-					(uint16_t) ((0.90)*(ADC1ConvertedModulationValue/4095.00)* Sine1024_12bit[lutIndex+FMPhase]));
 
-			lutIndex+=lutStep;
+					(uint16_t)
+
+					((0.90)*(ADC1ConvertedModulationValue/4095.00)* Sine1024_12bit[lutFcIndex+FMPhase])
+
+			);
+			//* REMOVED
+			lutFcIndex+=lutStep;
+			// *BAD
+			//lutFcIndex=accumulator10bits;
+
     	}
 
     	/*
@@ -404,7 +434,6 @@ void DMA1_Channel1_IRQHandler(void) // Called at 40 Hz, LED Toggles at 20 Hz
     /* Clear DMA1 Channel1 Half Transfer interrupt pending bits */
     DMA_ClearITPendingBit(DMA1_IT_HT1);
 
-
   }
 
   /* Test on DMA1 Channel1 Transfer Complete interrupt */
@@ -419,8 +448,16 @@ void DMA1_Channel1_IRQHandler(void) // Called at 40 Hz, LED Toggles at 20 Hz
     ADC1ConvertedPitchValue=RegularConvData[0];
     ADC1ConvertedModulationValue=(uint16_t) (RegularConvData[1]+RegularConvData[2])/2; //* TODO
     ADC1ConvertedDepthValue=RegularConvData[2];
-
+    //VoltValue=(double)(10*ADC1ConvertedPitchValue/4095.0);
+    // linear scale
     lutStep=rangeScaleLinear(ADC1ConvertedPitchValue,0,4095,10,512);
+
+    // 1V per octave scale
+    //VoltValue=2.0;
+    //lutStep=(uint16_t)rangeScaleVoltPerOclave(VoltValue,1,24);
+
+
+
   }
 
   FMPhase=0;//(uint16_t) RegularConvData[1]*0.1;
@@ -459,7 +496,7 @@ int main(void)
 	  //ADC1ConvertedPitchValue=RegularConvData[0];
 	  //ADC1ConvertedModulationValue=RegularConvData[1];
 	  //ADC1ConvertedModulationValue=4095;
-	  VoltValue=(float) (10*ADC1ConvertedPitchValue/4095.0);
+
 
 	  if (VoltValue < 1)
 	  	     {

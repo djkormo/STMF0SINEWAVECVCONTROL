@@ -11,11 +11,10 @@ extern int rangeScaleLinear
 		int y_max);
 
 
-extern float rangeScaleVoltPerOclave
-(float v,
-		float v_min,
-		float x_max,
-		float y_min,
-		float y_max);
+extern double rangeScaleVoltPerOclave
+(double v,
+		double v0,
+		double f0
+		);
 
 #endif /* ALGORITHM_H_ */

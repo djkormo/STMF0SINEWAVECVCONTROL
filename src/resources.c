@@ -4,7 +4,9 @@
 #include <math.h>
 // for uint16_t, uint8_t, uint32_t
 #include <stdint.h>
-
+/*
+http://www.daycounter.com/Calculators/Sine-Generator-Calculator.phtml
+*/
 
 // table for Sine with 12-bit resolution 2^12=4096, minimal 0, maximal - 4095
 const uint16_t Sine1024_12bit [1024] =
